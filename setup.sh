@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#change 1.2
 # Cập nhật hệ thống và cài đặt Docker (không cần sudo)
 apt-get install -y docker.io
 
