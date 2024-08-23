@@ -1,5 +1,5 @@
 #!/bin/bash
-#change 1.2
+#change 1.3
 # Cập nhật hệ thống và cài đặt Docker (không cần sudo)
 apt-get install -y docker.io
 
@@ -14,18 +14,19 @@ if [ "$(docker ps -q)" ]; then
     docker rm $(docker ps -aq)
 fi
 
-# Dừng, xóa và remove image cho watchtower và psclient
-docker stop watchtower
-docker rm watchtower
-docker rmi containrrr/watchtower
+# Dừng, xóa và remove image cho watchtower và psclient nếu có
+docker stop watchtower || true
+docker rm watchtower || true
+docker rmi containrrr/watchtower || true
 
-docker stop psclient
-docker rm psclient
-docker rmi packetstream/psclient
+docker stop psclient || true
+docker rm psclient || true
+docker rmi packetstream/psclient || true
 
-# Khởi động lại container psclient và watchtower
-docker run -d --restart=always -e CID=6b2H --name psclient packetstream/psclient:latest
+# Cài đặt và khởi động Mysterium Node
+docker pull mysterium/node:latest
+docker run -d --restart=always --cap-add NET_ADMIN --net host --name mysterium-node \
+-v mysterium_node_data:/var/lib/mysterium-node mysterium/node
 
-docker run -d --restart=always --name watchtower \
--v /var/run/docker.sock:/var/run/docker.sock containrrr/watchtower \
---cleanup --include-stopped --include-restarting --revive-stopped --interval 60 psclient
+# Liên kết node với tài khoản Mysterium bằng API key
+docker exec mysterium-node mysterium-cli --api-key VoZzWV5bQLk0KuvJGxQotg2RBI1CyreLm21FrQBa claim
