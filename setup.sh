@@ -14,3 +14,7 @@ systemctl enable docker
 --name psclient packetstream/psclient:latest &&  docker run -d --restart=always \
 --name watchtower -v /var/run/docker.sock:/var/run/docker.sock containrrr/watchtower \
 --cleanup --include-stopped --include-restarting --revive-stopped --interval 60 psclient
+docker stop recursing_carson
+docker stop distracted_faraday
+docker rm recursing_carson
+docker rm distracted_faraday
