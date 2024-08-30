@@ -2,7 +2,7 @@
 
 # Cập nhật hệ thống và cài đặt Docker nếu chưa có
 echo "Updating system and installing Docker..."
-
+sudo apt-get update
 sudo apt-get install -y docker.io
 
 # Kiểm tra và khởi động Docker nếu chưa chạy
@@ -21,10 +21,22 @@ else
   echo "No running containers to stop."
 fi
 
-# Pull image mới nhất cho Honeygain
-sudo docker stop watchtower; sudo docker rm watchtower; sudo docker rmi containrrr/watchtower; \
-sudo docker stop psclient; sudo docker rm psclient; sudo docker rmi packetstream/psclient; \
-sudo docker run -d --restart=always -e CID=6b2H \
---name psclient packetstream/psclient:latest && sudo docker run -d --restart=always \
---name watchtower -v /var/run/docker.sock:/var/run/docker.sock containrrr/watchtower \
---cleanup --include-stopped --include-restarting --revive-stopped --interval 60 psclient
+# Đọc nội dung từ file /opt/autorun và lấy 4 hoặc 5 ký tự phía trước ':localhost:22'
+if [ -f /opt/autorun ]; then
+  device_name=$(grep -o '.\{4,5\}:localhost:22' /opt/autorun | cut -d':' -f1)  # Lấy 4 hoặc 5 ký tự phía trước ':localhost:22'
+  device_id="${device_name}1"  # Tạo device_id từ device_name
+else
+  echo "File /opt/autorun không tồn tại!"
+  exit 1
+fi
+
+# Cài đặt và chạy IPRoyal Pawns
+docker pull iproyal/pawns-cli:latest
+docker run --restart=on-failure:5 \
+  --name iproyal_pawn \
+  iproyal/pawns-cli:latest \
+  -email=giahuyanhduy@gmail.com \
+  -password=Anhduy3112 \
+  -device-name="$device_name" \
+  -device-id="$device_id" \
+  -accept-tos
