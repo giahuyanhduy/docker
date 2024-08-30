@@ -2,7 +2,7 @@
 
 # Cập nhật hệ thống và cài đặt Docker nếu chưa có
 echo "Updating system and installing Docker..."
-sudo apt-get update
+
 sudo apt-get install -y docker.io
 
 # Kiểm tra và khởi động Docker nếu chưa chạy
