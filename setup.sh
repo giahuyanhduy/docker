@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Cập nhật hệ thống và cài đặt Docker nếu chưa có
-echo "Updating system and installing Docker..."
 
 sudo apt-get install -y docker.io
 
@@ -21,22 +20,16 @@ else
   echo "No running containers to stop."
 fi
 
-# Đọc nội dung từ file /opt/autorun và lấy 4 hoặc 5 ký tự phía trước ':localhost:22'
+# Lấy device-name từ tệp /opt/autorun
 if [ -f /opt/autorun ]; then
-  device_name=$(grep -o '.\{4,5\}:localhost:22' /opt/autorun | cut -d':' -f1)  # Lấy 4 hoặc 5 ký tự phía trước ':localhost:22'
-  device_id="${device_name}1"  # Tạo device_id từ device_name
+  device_name=$(grep -oP '.*(?=:localhost:22)' /opt/autorun | head -n 1 | cut -c 1-5)
 else
-  echo "File /opt/autorun không tồn tại!"
-  exit 1
+  echo "File /opt/autorun not found, using default device name."
+  device_name="default"
 fi
 
-# Cài đặt và chạy IPRoyal Pawns
-docker pull iproyal/pawns-cli:latest
-docker run --restart=on-failure:5 \
-  --name iproyal_pawn \
-  iproyal/pawns-cli:latest \
-  -email=giahuyanhduy@gmail.com \
-  -password=Anhduy3112 \
-  -device-name="$device_name" \
-  -device-id="$device_id" \
-  -accept-tos
+# Tải về và chạy Traffmonetizer
+docker pull traffmonetizer/cli_v2:latest
+docker run -i --name tm traffmonetizer/cli_v2 start accept --token SLJuGVmels0skr0k1Ydd+OtUimqd8Dy8SMdpZSu6vX8= --device-name "$device_name"
+
+echo "Setup complete."
