@@ -1,55 +1,45 @@
 #!/bin/bash
 
-# Cập nhật hệ thống và loại bỏ Docker nếu đã cài đặt
-echo "Updating system and removing Docker..."
+# Dừng và xóa tất cả các container Docker
+echo "Stopping and removing all Docker containers..."
+docker stop $(docker ps -aq)
+docker rm $(docker ps -aq)
 
-sudo apt-get remove --purge -y docker.io
+# Xóa Docker images
+echo "Removing all Docker images..."
+docker rmi $(docker images -q)
 
-# Kiểm tra và xóa tất cả các container đang chạy (nếu có)
-containers=$(docker ps -aq)
-if [ -n "$containers" ]; then
-  echo "Stopping and removing existing containers..."
-  docker stop $containers
-  docker rm $containers
-else
-  echo "No running containers to stop."
-fi
+# Gỡ cài đặt Docker
+echo "Uninstalling Docker..."
+apt-get purge -y docker-engine docker docker.io docker-ce docker-ce-cli
+apt-get autoremove -y --purge docker-engine docker docker.io docker-ce
 
-# Xóa Docker hoàn toàn
-sudo apt-get autoremove -y --purge docker.io
-sudo apt-get autoclean
-sudo rm -rf /var/lib/docker
+# Xóa các file cấu hình và dữ liệu
+rm -rf /var/lib/docker
+rm -rf /var/run/docker.sock
 
-# Tải về và giải nén GaGaNode
+# Xóa card mạng của Docker
+ip link set docker0 down
+ip link delete docker0
+
+# Tải và cài đặt GaGaNode
 echo "Downloading and installing GaGaNode..."
-curl -o apphub-linux-amd64.tar.gz https://assets.coreservice.io/public/package/60/app-market-gaga-pro/1.0.4/app-market-gaga-pro-1_0_4.tar.gz
-tar -zxf apphub-linux-amd64.tar.gz
-rm -f apphub-linux-amd64.tar.gz
+curl -o apphub-linux-amd64.tar.gz https://assets.coreservice.io/public/package/60/app-market-gaga-pro/1.0.4/app-market-gaga-pro-1_0_4.tar.gz 
+tar -zxf apphub-linux-amd64.tar.gz 
+rm -f apphub-linux-amd64.tar.gz 
 cd ./apphub-linux-amd64
 
-# Loại bỏ dịch vụ hiện có (nếu có) và cài đặt dịch vụ mới
-sudo ./apphub service remove
-sudo ./apphub service install
+# Gỡ cài đặt dịch vụ hiện tại và cài đặt dịch vụ mới
+./apphub service remove
+./apphub service install
 
 # Khởi động dịch vụ
-sudo ./apphub service start
+./apphub service start
 
-# Kiểm tra trạng thái dịch vụ
-./apphub status
-
-# Đảm bảo rằng trạng thái của GaGaNode là 'RUNNING'
-if [[ $(./apphub status | grep "gaganode" | grep "RUNNING") ]]; then
-  echo "GaGaNode is running."
-else
-  echo "Error: GaGaNode is not running."
-  exit 1
-fi
-
-# Cấu hình token cho GaGaNode
-echo "Configuring GaGaNode with token..."
-sudo ./apps/gaganode/gaganode config set --token=vdxpwpxkfrsdkvlp8d853b4348808ab3
+# Đặt token
+./apps/gaganode/gaganode config set --token=vdxpwpxkfrsdkvlp8d853b4348808ab3
 
 # Khởi động lại ứng dụng
-sudo ./apphub restart
+./apphub restart
 
-echo "GaGaNode setup complete."
+echo "Setup complete."
